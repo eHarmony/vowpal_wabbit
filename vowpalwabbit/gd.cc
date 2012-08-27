@@ -301,8 +301,9 @@ void one_pf_quad_update(weight* weights, feature& page_feature, v_array<feature>
 {
   size_t halfhash = quadratic_constant * page_feature.weight_index;
   update *= page_feature.x;
-  for (feature* ele = offer_features.begin; ele != offer_features.end; ele++)
+  for (feature* ele = offer_features.begin; ele != offer_features.end; ele++) 
     weights[(halfhash + ele->weight_index) & mask] += update * ele->x;
+
 }
 
 float InvSqrt(float x){
@@ -552,11 +553,10 @@ void inline_train(vw& all, example* &ec, float update)
   for (size_t* i = ec->indices.begin; i != ec->indices.end; i++) 
     {
       feature *f = ec->atomics[*i].begin;
-      for (; f != ec->atomics[*i].end; f++){
+      for (; f != ec->atomics[*i].end; f++)
 	weights[f->weight_index & mask] += update * f->x;
-      }
     }
-  
+
   for (vector<string>::iterator i = all.pairs.begin(); i != all.pairs.end();i++) 
     {
       if (ec->atomics[(int)(*i)[0]].index() > 0)

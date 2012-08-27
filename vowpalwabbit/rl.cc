@@ -71,7 +71,7 @@ command line arguments, but I was hesitant to add a whole mess of additional fla
 #include "cache.h"
 #include "global_data.h"
 #include "example.h"
-
+#include "constant.h"
 #include "gd.h" // Making use of the build in training functions
 
 using namespace std;
@@ -100,6 +100,9 @@ namespace RL {
 
   // Actions known to be available
   set<vector<feature_value> > actions;
+
+  // Qudratic defining pairs of namespaces
+  vector<string> pairs;
 
   char* bufread_label(reward_label* ld, char* c)
   {
@@ -228,7 +231,7 @@ namespace RL {
   }
 
   // Decay eligibility traces
-  void decay_traces() {
+  void decay_traces(vw* all) {
     // If traces haven't been instantiated, do nothing
     if(traces == NULL) 
       return;
@@ -308,6 +311,7 @@ namespace RL {
       return;
 
     if (delta != 0.) {
+
       // Copied from gd.cc (Can't use it directly without predict getting called)
       if (all->adaptive)
 	if (all->power_t == 0.5 || !all->exact_adaptive_norm)
@@ -318,6 +322,24 @@ namespace RL {
 	inline_train(*all, ec, delta);
       if (all->sd->contraction < 1e-10)  // updating weights now to avoid numerical instability
 	sync_weights(*all);
+
+    }
+  }
+
+  // Expand the quadratics into memory for this example
+  void expand_quadratics(vw* all, example* ec) {
+    push(ec->indices, (size_t)32);
+    for (vector<string>::iterator i = pairs.begin(); i != pairs.end(); i++) {
+      v_array<feature> temp = ec->atomics[(int)(*i)[0]];
+      for (; temp.begin != temp.end; temp.begin++) {
+	size_t halfhash = quadratic_constant * (*temp.begin).weight_index;
+	for ( feature* ele = ec->atomics[(int)(*i)[1]].begin; ele != ec->atomics[(int)(*i)[1]].end; ele++) {
+	  // create feature...
+	  size_t newhash = halfhash + ele->weight_index;
+	  feature f = {(*temp.begin).x * ele->x,newhash};
+	  push(ec->atomics[32], f);
+	}
+      }
     }
   }
 
@@ -391,6 +413,14 @@ namespace RL {
     {
       // This is a set, so we don't get duplicates
       actions.insert(varray_to_vector(ec->atomics[65]));
+    }
+
+    // Check for save command, and copy pairs back over if it is happening
+    if (ec->tag.index() >= 4 && !strncmp((const char*) ec->tag.begin, "save", 4)) {
+      all->pairs = pairs;
+      command_example(*all, ec);
+      all->pairs.clear();
+      return;
     }
 
     // Check for rl_start tag to indicate the beginning of a new episode
@@ -474,8 +504,9 @@ namespace RL {
 
       // Handle Eligibility Traces
       // Decay X_t-1
-      decay_traces();
+      decay_traces(all);
       // Add x_t, then train
+      expand_quadratics(all,last_ec);
       update_traces(last_ec);
 
       if(rl_loss) {
@@ -483,7 +514,7 @@ namespace RL {
       }
 
       // Train
-      train_on_traces(all, traces, last_ec->eta_round);
+      train_on_traces(all, traces, last_ec->eta_round); // traces instead of ec
     }     
 
     // Update prediction that gets returned: Q(s',a')
@@ -504,7 +535,6 @@ namespace RL {
       last_ec = alloc_example(sizeof(RL::reward_label));
       copy_example_data(last_ec, ec, sizeof(RL::reward_label));
     }
-
   }
 
   void drive_rl(void *in)
@@ -548,5 +578,8 @@ namespace RL {
     all.driver = drive_rl;
     base_learner = all.learn;
     all.learn = learn;
+    pairs = all.pairs;
+    // We will handle the quadratics for you...
+    all.pairs.clear();
   }
 }
