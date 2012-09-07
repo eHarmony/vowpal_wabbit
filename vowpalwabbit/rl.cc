@@ -306,12 +306,12 @@ namespace RL {
   }
 
   // Update weights using the traces and specified delta
-  void train_on_traces(vw* all, example* ec, float delta) {
+  void train_on_traces(vw* all, example* ec, float delta, float imp_weight) {
     if(ec == NULL) 
       return;
 
     if (delta != 0.) {
-
+      ((reward_label*)ec->ld)->weight = imp_weight;
       // Copied from gd.cc (Can't use it directly without predict getting called)
       if (all->adaptive)
 	if (all->power_t == 0.5 || !all->exact_adaptive_norm)
@@ -514,7 +514,7 @@ namespace RL {
       }
 
       // Train
-      train_on_traces(all, traces, last_ec->eta_round); // traces instead of ec
+      train_on_traces(all, traces, last_ec->eta_round, reward_label_data->weight); // traces instead of ec
     }     
 
     // Update prediction that gets returned: Q(s',a')
