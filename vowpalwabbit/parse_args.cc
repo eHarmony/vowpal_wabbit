@@ -325,6 +325,34 @@ vw* parse_args(int argc, char *argv[])
 	  }
 	  cerr << endl;
 	}
+      //if the second character is :, cross the first character with all characters
+      int original_size = all->pairs.size();
+      for (int i = 0; i < original_size;i++) {
+          if(all->pairs[i][1]==':'&&all->pairs[i][0]!=':'){
+   	      for (int j=33; j<127; j++){
+	        if(j==58||j==124){continue;}
+                string tmp;
+	        tmp = all->pairs[i][0];
+	        tmp += (char)j;
+	        all->pairs.push_back(tmp);
+ 	      }
+          }
+      }    
+      //cross all pairs if -q ::  
+      for (int i = 0; i < original_size;i++) {
+          if(all->pairs[i][1]==':'&&all->pairs[i][0]==':'){
+   	      for (int j=33; j<127; j++){
+	        if(j==58||j==124){continue;}
+	        for (int k=33; k<127; k++){
+		  if(k==58||k==124){continue;}
+                  string tmp; 
+		  tmp = (char)j;
+	          tmp += (char)k;
+	          all->pairs.push_back(tmp);
+	        }
+ 	      }
+          }
+      }
     }
 
   if (vm.count("cubic"))
