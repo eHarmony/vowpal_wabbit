@@ -312,6 +312,8 @@ vw* parse_args(int argc, char *argv[])
     {
       all->pairs = vm["quadratic"].as< vector<string> >();
       vector<string> temp(all->pairs);
+      if(!all->quiet)
+      cerr<<"creating quadratic features for pairs: ";       
       for (vector<string>::iterator i = all->pairs.begin(); i != all->pairs.end();i++){
         if(!all->quiet){
           cerr << *i << " ";
