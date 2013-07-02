@@ -311,48 +311,54 @@ vw* parse_args(int argc, char *argv[])
   if (vm.count("quadratic"))
     {
       all->pairs = vm["quadratic"].as< vector<string> >();
-      if (!all->quiet)
-	{
-	  cerr << "creating quadratic features for pairs: ";
-	  for (vector<string>::iterator i = all->pairs.begin(); i != all->pairs.end();i++) {
-	    cerr << *i << " ";
-	    if (i->length() > 2)
-	      cerr << endl << "warning, ignoring characters after the 2nd.\n";
-	    if (i->length() < 2) {
-	      cerr << endl << "error, quadratic features must involve two sets.\n";
-	      throw exception();
-	    }
-	  }
-	  cerr << endl;
-	}
-      //if the second character is :, cross the first character with all characters
-      int original_size = all->pairs.size();
-      for (int i = 0; i < original_size;i++) {
-          if(all->pairs[i][1]==':'&&all->pairs[i][0]!=':'){
-   	      for (int j=33; j<127; j++){
-	        if(j==58||j==124){continue;}
-                string tmp;
-	        tmp = all->pairs[i][0];
-	        tmp += (char)j;
-	        all->pairs.push_back(tmp);
- 	      }
+      vector<string> temp(all->pairs);
+      for (vector<string>::iterator i = all->pairs.begin(); i != all->pairs.end();i++){
+        if(!all->quiet){
+          cerr << *i << " ";
+          if (i->length() > 2)
+            cerr << endl << "warning, ignoring characters after the 2nd.\n";
+          if (i->length() < 2) {
+            cerr << endl << "error, quadratic features must involve two sets.\n";
+            throw exception();
           }
-      }    
-      //cross all pairs if -q ::  
-      for (int i = 0; i < original_size;i++) {
-          if(all->pairs[i][1]==':'&&all->pairs[i][0]==':'){
-   	      for (int j=33; j<127; j++){
-	        if(j==58||j==124){continue;}
-	        for (int k=33; k<127; k++){
-		  if(k==58||k==124){continue;}
-                  string tmp; 
-		  tmp = (char)j;
-	          tmp += (char)k;
-	          all->pairs.push_back(tmp);
-	        }
- 	      }
+        }
+        //-q x:
+        if((*i)[0]!=':'&&(*i)[1]==':'){
+          for (int j=33; j<127; j++){
+	    if(j==58||j==124){continue;}
+            string tmp;
+	    tmp = (*i)[0];
+	    tmp += (char)j;
+	    temp.push_back(tmp);
+ 	  }
+        }
+        //-q :x
+        if((*i)[0]==':'&&(*i)[1]!=':'){
+          for (int j=33; j<127; j++){
+	    if(j==58||j==124){continue;}
+            string tmp;
+	    tmp = (char)j;
+	    tmp += (*i)[1];
+	    temp.push_back(tmp);
+ 	  }
+        }
+        //-q ::
+        if((*i)[0]==':'&&(*i)[1]==':'){
+          for (int j=33; j<127; j++){
+            if(j==58||j==124){continue;}
+            for (int k=33; k<127; k++){
+              if(k==58||k==124){continue;}
+              string tmp; 
+              tmp = (char)j;
+              tmp += (char)k;
+              temp.push_back(tmp);
+            }
           }
+        }    
       }
+      temp.swap(all->pairs);
+      if(!all->quiet)
+      cerr<<endl;
     }
 
   if (vm.count("cubic"))
