@@ -326,6 +326,7 @@ vw* parse_args(int argc, char *argv[])
         }
         //-q x:
         if((*i)[0]!=':'&&(*i)[1]==':'){
+          temp.reserve(temp.size()+92);
           for (int j=33; j<127; j++){
 	    if(j==58||j==124){continue;}
             string tmp;
@@ -336,6 +337,7 @@ vw* parse_args(int argc, char *argv[])
         }
         //-q :x
         if((*i)[0]==':'&&(*i)[1]!=':'){
+          temp.reserve(temp.size()+92);
           for (int j=33; j<127; j++){
 	    if(j==58||j==124){continue;}
             string tmp;
@@ -346,6 +348,7 @@ vw* parse_args(int argc, char *argv[])
         }
         //-q ::
         if((*i)[0]==':'&&(*i)[1]==':'){
+          temp.reserve(temp.size()+8464);
           for (int j=33; j<127; j++){
             if(j==58||j==124){continue;}
             for (int k=33; k<127; k++){
